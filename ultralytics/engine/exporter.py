@@ -18,6 +18,7 @@ TensorFlow.js           | `tfjs`                    | yolo11n_web_model/
 PaddlePaddle            | `paddle`                  | yolo11n_paddle_model/
 MNN                     | `mnn`                     | yolo11n.mnn
 NCNN                    | `ncnn`                    | yolo11n_ncnn_model/
+Neuronx                 | `neuronx` .               | yolo11n_neuronx_model/
 IMX                     | `imx`                     | yolo11n_imx_model/
 
 Requirements:
@@ -67,6 +68,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import torch_neuronx
 
 from ultralytics.cfg import TASK2DATA, get_cfg
 from ultralytics.data import build_dataloader
@@ -115,6 +117,7 @@ def export_formats():
         ["PaddlePaddle", "paddle", "_paddle_model", True, True],
         ["MNN", "mnn", ".mnn", True, True],
         ["NCNN", "ncnn", "_ncnn_model", True, True],
+        ["Neuronx", "neuronx", "_neuronx_model", True, False],
         ["IMX", "imx", "_imx_model", True, True],
     ]
     return dict(zip(["Format", "Argument", "Suffix", "CPU", "GPU"], zip(*x)))
@@ -209,6 +212,7 @@ class Exporter:
             paddle,
             mnn,
             ncnn,
+            neuronx,
             imx,
         ) = flags  # export booleans
         is_tf_format = any((saved_model, pb, tflite, edgetpu, tfjs))
@@ -380,6 +384,8 @@ class Exporter:
             f[12], _ = self.export_ncnn()
         if imx:
             f[13], _ = self.export_imx()
+        if neuronx: # Neuronx
+            f[14], _ = self.export_neuronx()
 
         # Finish
         f = [str(x) for x in f if x]  # filter out '' and None
@@ -424,7 +430,19 @@ class Exporter:
         if n < 300:
             LOGGER.warning(f"{prefix} WARNING ⚠️ >300 images recommended for INT8 calibration, found {n} images.")
         return build_dataloader(dataset, batch=batch, workers=0)  # required for batch loading
+    
+    @try_export
+    def export_neuronx(self, prefix=colorstr("Neuronx:")):
+        """YOLO Neuronx format export."""
+        LOGGER.info(f"\n{prefix} starting export with torch {torch.__version__}...")
+        f = self.file.with_suffix(".neuronx")
+        ## neuronx-cc is a pre-req for this, for now, we aren't checking this
+        ## but if required we will have to.
+        model = torch_neuronx.trace(self.model, self.im)
+        return f, model
+        ## WIP ##
 
+        
     @try_export
     def export_torchscript(self, prefix=colorstr("TorchScript:")):
         """YOLO TorchScript model export."""

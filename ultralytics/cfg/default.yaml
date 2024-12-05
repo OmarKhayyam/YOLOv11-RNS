@@ -76,7 +76,8 @@ show_boxes: True # (bool) show prediction boxes
 line_width: # (int, optional) line width of the bounding boxes. Scaled to image size if None.
 
 # Export settings ------------------------------------------------------------------------------------------------------
-format: torchscript # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
+#format: torchscript # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
+format: neuronx # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
 keras: False # (bool) use Kera=s
 optimize: False # (bool) TorchScript: optimize for mobile
 int8: False # (bool) CoreML/TF INT8 quantization
